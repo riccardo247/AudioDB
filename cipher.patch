@@ -1,0 +1,11 @@
+--- /usr/local/lib/python3.10/dist-packages/pytube/cipher.py.orig	2023-09-27 20:44:40.979188655 +0000
++++ /usr/local/lib/python3.10/dist-packages/pytube/cipher.py	2023-09-27 20:45:22.242263415 +0000
+@@ -408,7 +408,7 @@
+     plan_regex = re.compile(transform_start)
+     match = plan_regex.search(raw_code)
+
+-    transform_plan_raw = find_object_from_startpoint(raw_code, match.span()[1] - 1)
++    transform_plan_raw = js
+
+     # Steps are either c[x](c[y]) or c[x](c[y],c[z])
+     step_start = r"c\[(\d+)\]\(c\[(\d+)\](,c(\[(\d+)\]))?\)"
