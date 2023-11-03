@@ -24,18 +24,20 @@ config.read('config.ini')
 openai.api_key = config['openai']['api_key']
 class EngineSteam():
     """
-
+    class to process all chain from audio file to audio chunks, text, SNR and voice desctiption
     """
     def __init__(self):
         #this is init for deep denoise
         self.model, self.df_state, _ = init_df()
-
+        #this is for speech recognition
+        self.r = sr.Recognizer()
+        self.r.energy_threshold = 600
     def speech_to_text(self, audio_path):
         """
         :param audio_path: file in input wav
         :return: speech text
         """
-        r = sr.Recognizer()
+
         chunk = AudioSegment.from_mp3(audio_path)
         filename = self.get_filename(audio_path)
         temp_directory = tempfile.gettempdir()
@@ -43,10 +45,10 @@ class EngineSteam():
         chunk.export(temp, format='wav')
         with sr.AudioFile(temp) as source:
             # listen for the data (load audio to memory)
-            audio_data = r.record(source)
+            audio_data = self.r.record(source)
             # recognize (convert from speech to text)
             #text = r.recognize_google(audio_data)
-            text = r.recognize_whisper_api(audio_data)
+            text = self.r.recognize_whisper_api(audio_data)
             #text = r.recognize_sphinx(audio_data)
 
         return text
@@ -288,7 +290,7 @@ class EngineSteam():
             with open(output_filepath, 'w', encoding='utf-8') as output_file:
                 output_file.write(text)
 
-    def process_all(self, file_path, out_path, skip_n=0):
+    def process_all(self, file_path, out_path, skip_n=0, load_n=100, device="cuda:0"):
         """
         process all chain for all files in file_path
         :param file_path: path of dir in input
@@ -296,7 +298,7 @@ class EngineSteam():
         :return:
         """
         for index, filename in enumerate(os.listdir(file_path)):
-            if index < skip_n:
+            if index < skip_n or index > load_n:
                 continue  # Skip the first n files
             filepath = os.path.join(file_path, filename)
             try:
@@ -319,17 +321,21 @@ class EngineSteam():
         :param out_path: output path
         :return:
         """
-
+        file_name = self.get_filename(file_path)
+        #put everything into dir with audio filename
+        out_path = os.path.join(out_path, file_name)
+        if not os.path.exists(out_path):
+            os.makedirs(out_path)
         cleandir = os.path.join(out_path, r"voice_clean")
         mp3dir = os.path.join(out_path, r"mp3")
-        chunkdir = os.path.join(out_path, self.get_filename(file_path))
-        cleachunkndir = os.path.join(out_path, self.get_filename(file_path) + "_clean")
-        txtdir = os.path.join(out_path, self.get_filename(file_path) + "_txt")
-        pitchdir = os.path.join(out_path, self.get_filename(file_path) + "_pitch")
+        chunkdir = os.path.join(out_path, file_name)
+        cleachunkndir = os.path.join(out_path, file_name + "_clean")
+        txtdir = os.path.join(out_path, file_name + "_txt")
+        pitchdir = os.path.join(out_path, file_name + "_pitch")
         if not os.path.exists(mp3dir):
             os.makedirs(mp3dir)
         #convert to mp3
-        fileout = self.change_extension(self.get_filename(file_path), "mp3")
+        fileout = self.change_extension(file_name, "mp3")
         fileout = os.path.join(mp3dir, fileout)
         self.convert_to_mp3(file_path, fileout)
         #demucs files
@@ -360,21 +366,21 @@ def main():
     parser = argparse.ArgumentParser(description="Process audio files in chunks and get tedt, pitch and voice description")
     parser.add_argument("path_to_directory", help="directory containing input files")
     parser.add_argument("output_dir", help="directory output files")
-    parser.add_argument("--skipn", help="Optional skip first n files", default=0)
-    parser.add_argument("--loadn", help="process n files", default=100)
+    parser.add_argument("--skip_n", help="Optional skip first n files", default=0)
+    parser.add_argument("--load_n", help="process n files", default=100)
+    parser.add_argument("--device", help="GPU to use", default="cuda:0")
     args = parser.parse_args()
     if len(sys.argv) < 3:
-        print("Usage: python script.py <path_to_directory> <output_dir> --skipn <number of files to skip>")
+        print("Usage: python script.py <path_to_directory> <output_dir> --skip_n <number of files to skip> --load_n <number of files to process>")
         sys.exit(1)
 
     dir_path = args.path_to_directory
     out_path = args.output_dir
-    skipn = args.skipn
-    loadn = args.loadn
+    skip_n = args.skipn
+    load_n = args.loadn
+    device = args.device
     engine = EngineSteam()
-    engine.process_all(dir_path, out_path, skipn, loadn)
-    #engine.process_all(r"C:\Users\ricca\Downloads\audiofiles", r"C:\Users\ricca\Downloads\track1")
-    #extract.process_file(r"C:\Users\ricca\Downloads\-0skjm-uJSs.ogg")
+    engine.process_all(dir_path, out_path, skip_n, load_n, device)
 
 
 if __name__ == '__main__':

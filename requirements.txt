@@ -52,7 +52,7 @@ numba==0.58.1
 numpy==1.26.1
 omegaconf==2.3.0
 openai==0.28.1
-openai-whisper==20230918
+openai-whisper
 openunmix==1.2.1
 packaging==23.2
 pandas==2.1.1
@@ -97,7 +97,7 @@ typing_extensions==4.8.0
 tzdata==2023.3
 urllib3==2.0.6
 wcwidth==0.2.8
-Whisperer==0.2.0
+Whisperer
 win32-setctime==1.1.0
 yarg==0.1.9
 yarl==1.9.2
