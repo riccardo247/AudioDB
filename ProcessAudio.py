@@ -298,7 +298,7 @@ class EngineSteam():
         :return:
         """
         for index, filename in enumerate(os.listdir(file_path)):
-            if index < skip_n or index > load_n:
+            if index < skip_n or index > skip_n+load_n:
                 continue  # Skip the first n files
             filepath = os.path.join(file_path, filename)
             try:
@@ -366,8 +366,8 @@ def main():
     parser = argparse.ArgumentParser(description="Process audio files in chunks and get tedt, pitch and voice description")
     parser.add_argument("path_to_directory", help="directory containing input files")
     parser.add_argument("output_dir", help="directory output files")
-    parser.add_argument("--skip_n", help="Optional skip first n files", default=0)
-    parser.add_argument("--load_n", help="process n files", default=100)
+    parser.add_argument("--skip_n", type=int, help="skip first n files", default=0)
+    parser.add_argument("--load_n", type=int, help="process n files", default=100)
     parser.add_argument("--device", help="GPU to use", default="cuda:0")
     args = parser.parse_args()
     if len(sys.argv) < 3:
@@ -376,8 +376,8 @@ def main():
 
     dir_path = args.path_to_directory
     out_path = args.output_dir
-    skip_n = args.skipn
-    load_n = args.loadn
+    skip_n = args.skip_n
+    load_n = args.load_n
     device = args.device
     engine = EngineSteam()
     engine.process_all(dir_path, out_path, skip_n, load_n, device)
