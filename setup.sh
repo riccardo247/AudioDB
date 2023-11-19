@@ -1,9 +1,25 @@
 #!/bin/bash
 
+venv_dir="/ve/audiodb"
 n=5  # Number of directories and scripts to run. Adjust as needed.
 audio_in_path="../yt_audio"
 script_path="./ProcessAudio.py"
+
+# Create the virtual environment
+python3 -m venv "$venv_dir"
+
+# Activate the virtual environment
+source "$venv_dir/bin/activate"
+
 export OPENAI_KEY_API=""
+
+# Install cpu/cuda pytorch (>=1.9) dependency from pytorch.org, e.g.:
+pip install torch torchaudio -f https://download.pytorch.org/whl/cpu/torch_stable.html
+# Install DeepFilterNet
+pip install deepfilternet
+# Or install DeepFilterNet including data loading functionality for training (Linux only)
+pip install deepfilternet[train]
+
 
 for ((i=1; i<=n; i++)); do
   out_dir="../out_audio_$i"
